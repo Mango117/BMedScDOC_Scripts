@@ -1,0 +1,14 @@
+--------------------
+R Requirements:
+
+R == 4.1.0
+RStudio == 1.4.1414
+XQuartz == 2.8.0
+
+rgl == 0.106.8
+misc3d == 0.9-0
+mnitemplate = 1.0.0
+aal == 0.1.1
+neurobase == 1.32.1
+magick == 2.7.2
+dplyr == 1.0.7
