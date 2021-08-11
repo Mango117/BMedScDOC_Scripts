@@ -1,8 +1,10 @@
 #List of reusable functions that may be called in BMedScDOC_Scripts
 
 #imports
+import re
 import os
 import sys
+import csv
 import progressbar
 import shutil 
 from collections import Counter
@@ -10,6 +12,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from PIL import Image
+from langdetect import detect
 from sklearn.feature_extraction.text import CountVectorizer
 from wordcloud import WordCloud
 from gensim.parsing.preprocessing import remove_stopwords
@@ -21,8 +24,7 @@ from pathlib import Path
 downloads_path = str(Path.home() / "Downloads") + "/" #Find Downloads folder path
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 nlp = spacy.load("en_core_web_sm", disable=['parser', 'ner'])
-
-
+extra_stopwords = ["said", "say", "...", "like", "et", "al", "doi", "use", "https", "http"]
 
 
 #functions
@@ -60,7 +62,7 @@ class outputs:
         return plt
     
 
-    #Action: Creates a wordcloud from a list of words
+    #Action: Creates a wordcloud from a list of words (with repeats)
     #Input: A list of strings ie.[word1, word2]
     #Input: Path to image mask ie. "usr/Documents/Folder" default is head.png
     #Input: Path to save location ie. "usr/Documents/Folder" default is downloads folder
@@ -90,10 +92,10 @@ class outputs:
     #Action: Make a csv file from a folder of txts, with 2 columns: [Name] and [Text]
     #Input: path to folder of txt files
     #Output: csv with 2 columns saved to the current directory. csv has 2 columns: [Name] and [Text]
-    def make_csv(folder_path):
-        txt_lst = os_level.get_corpus(folder_path) #list
+    def make_csv(folder_path, extension):
+        txt_lst = os_level.get_corpus(folder_path, extension) #list
     
-        headers = ["Name", "Text"]
+        headers = ["name", "text"]
         Name = txt_lst
         Text = []
     
@@ -128,35 +130,55 @@ class processing:
         n.close()
 
 
-
-    def preprocess(string, csv_path):
-        #Action: Performs preprocessing of the string
-        #Input: string to be modified
-        #Output: list of preprocessed string ie.[preprocessed, words]
+    #Action: Performs preprocessing of the string and returns an empty list if non-english.
+    #String should already be lowered and references removed
+    #Input: string to be modified and tokenised
+    #Output: list of preprocessed string ie.[preprocessed, words]
+    def preprocess(string, csv_path = "/Users/manojarachige/Documents/Coding/BMedScDOC1/Assets/Inputs/replacement.csv"):
         
-        #remove line breaks
+        #lower
+        string = string.lower()
+        
+        #Remove weird characters that aren't usual ASCII 0-127 chars
+        encoded_string = string.encode("ascii", "ignore")
+        string = encoded_string.decode()
+        
+        #remove line breaks and hyphenated words
+        string.replace("-\n", "").replace("\n", " ").replace("\r", " ")
+        string = re.sub(r'[^A-Za-z ]+', '', string)
+        
+        
+        #check if english
+        if detect(string) != "en":
+            return []
+        
+        #remove stopwords
+        string = remove_stopwords(string)
+        
         #lemmatise
-        lemmatised = nlp(string.replace("\n", " ").replace("\r", " "))
+        lemmatised = nlp(string)
         lemmatised = " ".join([token.lemma_ for token in lemmatised])
     
-        #remove stopwords
-        stopwords_removed = remove_stopwords(lemmatised)
     
         #replace
         df = pd.read_csv(csv_path)
-        replaced = stopwords_removed
+        replaced = lemmatised
         for i in range(len(df)):
             replaced = replaced.replace(df["Location"][i], df["Replacement"][i])
-            #print("executed {}".format(i))
+            
         
         #tokenise
         tokenised = word_tokenize(replaced)
-
-        return tokenised
+        
+        #remove single chars and remove stopwords
+        cleaned = [word for word in tokenised if len(word) > 1 and word not in extra_stopwords]
+        
+        #returns a list
+        return cleaned
     
     
     
-    #Action: Converts a pdf file to a txt file and removes references
+    #Action: Converts a pdf file to a txt file, lowers and removes references
     #Input: a single PDF file
     #Output: a single txt file of the same filename 
     def pdftotxt(text):
@@ -166,7 +188,7 @@ class processing:
             if string == None:
                 string = "None"
                 output.write(string)
-        processing.remove_ref("{}.txt".format((text)[:-4])) #removes references in this step
+        processing.remove_ref("{}.txt".format((text)[:-4])) #removes references in this step AND lowers the file
         return "{}.txt".format((text)[:-4]) 
 
 
@@ -175,8 +197,8 @@ class os_level:
     #Input: path to folder of files
     #The extension of the file type you want
     #Output: list of the names of 
-    def get_corpus(folder, extension):
-        lst = os.listdir(basepath, extension)
+    def get_corpus(basepath, extension):
+        lst = os.listdir(basepath)
         lst.sort()
         newlst = []
         for file in lst:
@@ -232,10 +254,10 @@ class os_level:
     #Input: source is a string path to folder of pdfs
     #Input: output_location is a string path to output location of successfully separated pdfs
     #Output: Copies valid pdfs to a specified output_location
-    def pdf_separate(source, output_location):
+    def pdf_separate(source, output_location, extension = "pdf"):
         separated_counter = 0
         time_counter = 0
-        pdf_list = os_level.get_corpus(source)
+        pdf_list = os_level.get_corpus(source, extension)
         length = len(pdf_list)
         with progressbar.ProgressBar(max_value=length, redirect_stdout=True) as p:
             for i in pdf_list:
