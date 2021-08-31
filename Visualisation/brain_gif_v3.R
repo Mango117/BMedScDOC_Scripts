@@ -1,6 +1,6 @@
 #Working, and saves gif file to location. Need to search up locatino in finder with Cmd+Shift+G
 
-setwd("/Users/manojarachige/Documents/Coding/BmedScDOC1/BMedScDOC2021/R_BMedScDOC")
+setwd("/Users/manojarachige/Documents/Coding/BmedScDOC1/BMedScDOC_Scripts/Visualisation")
 library(rgl)
 library(misc3d)
 library(MNITemplate)
@@ -19,7 +19,7 @@ labs = aal_get_labels()
 
 
 #set up table: 2 rows [brain area] and [number of mentions]
-df <- read.csv(file = "/Users/manojarachige/Documents/Coding/BmedScDOC1/BMedScDOC2021/R_BMedScDOC/Full_Run/test_gif.csv", header = FALSE)
+df <- read.csv(file = "/Users/manojarachige/Documents/Coding/BmedScDOC1/Assets/displaygiftest.csv", header = FALSE)
 df <- df[c(1:2), ]
 df <- t(df)
 df <- df[-1, ]
@@ -32,7 +32,7 @@ df$Number <- as.numeric(as.character(df$Number))
 df <- df[order(df$Number),]
 
 #Get colfunc 
-colfunc <- colorRampPalette(c("blue", "red"))
+colfunc <- colorRampPalette(c("lightblue", "red"))
 y <- nrow(df)
 colfunc(y)
 plot(rep(1,y),col=colfunc(y),pch=19,cex=3)
@@ -58,5 +58,5 @@ for (row in 1:nrow(df)){
 text3d(x=dtemp[1]/2, y=dtemp[2]/2, z = dtemp[3]*0.98, text="Top")
 text3d(x=-0.98, y=dtemp[2]/2, z = dtemp[3]/2, text="Right")
 #create movie
-movie3d(spin3d(),duration=5, fps = 5, startTime = 0, movie = "movie", convert = TRUE, type = "gif", top = TRUE)
+movie3d(spin3d(),duration=12, fps = 5, startTime = 0, movie = "movie", convert = TRUE, type = "gif", top = TRUE)
 
