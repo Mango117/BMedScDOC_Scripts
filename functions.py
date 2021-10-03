@@ -171,7 +171,7 @@ class processing:
         tokenised = word_tokenize(replaced)
         
         #remove single chars and remove stopwords
-        cleaned = [word for word in tokenised if len(word) > 1 and word not in extra_stopwords]
+        cleaned = [word for word in tokenised if len(word) > 2 and word not in extra_stopwords]
         
         #returns a list
         return cleaned

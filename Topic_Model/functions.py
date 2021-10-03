@@ -134,7 +134,7 @@ class processing:
     #String should already be lowered and references removed
     #Input: string to be modified and tokenised
     #Output: list of preprocessed string ie.[preprocessed, words]
-    def preprocess(string, csv_path = "/Users/manojarachige/Documents/Coding/BMedScDOC1/Assets/Inputs/replacement.csv"):
+    def preprocess(string, csv_path = "/Users/manojarachige/Documents/Coding/BMedScDOC1/Assets/Inputs/CombinedDict.csv"):
         
         #lower
         string = string.lower()
@@ -171,7 +171,7 @@ class processing:
         tokenised = word_tokenize(replaced)
         
         #remove single chars and remove stopwords
-        cleaned = [word for word in tokenised if len(word) > 1 and word not in extra_stopwords]
+        cleaned = [word for word in tokenised if len(word) > 2 and word not in extra_stopwords]
         
         #returns a list
         return cleaned
