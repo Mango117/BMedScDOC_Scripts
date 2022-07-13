@@ -1,4 +1,4 @@
-Welcome to the new repository - Tue 10 Aug 2021. It's messy but it does the job
+Welcome to the new repository - Tue 10 Aug 2021.
 
 <strong>functions.py</strong> is a list of functions that can be reused to perform various tasks
 
